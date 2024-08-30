@@ -89,7 +89,7 @@ public class ProductServiceImpl implements IProductService {
                 .orElseThrow(() -> new SimpleException("Sản phẩm không tìm thấy", HttpStatus.NOT_FOUND));
         // Nếu có tên sản phẩm mới, kiểm tra xem tên đó có trùng với các tên sản phẩm khác không (ngoài tên của sản phẩm hiện tại)
         if (productRequest.getProductName() != null &&
-                !productRequest.getProductName().equals(existingProduct.getProductName())) {
+                productRequest.getProductName().equals(existingProduct.getProductName())) {
             throw new SimpleException("Tên sản phẩm đã tồn tại: "
                     + productRequest.getProductName(), HttpStatus.BAD_REQUEST);
         }

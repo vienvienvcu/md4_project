@@ -9,7 +9,7 @@ import ra.model.entity.Address;
 import ra.repository.IAddressRepository;
 import ra.repository.IUserRepository;
 import ra.service.IAddressService;
-import ra.service.IUserService;
+
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class AddressServiceImpl implements IAddressService {
                 .orElseThrow(()->new SimpleException("Not pound" + addressId, HttpStatus.NOT_FOUND));
 
         //Kiểm tra sự tồn tại của address
-        if (addressRequest.getFullAddress()!=null && !addressRequest.getFullAddress().equals(existingAddress.getFullAddress())) {
+        if (addressRequest.getFullAddress()!=null && addressRequest.getFullAddress().equals(existingAddress.getFullAddress())) {
             throw new SimpleException("Address is existing: "
                     + addressRequest.getFullAddress(), HttpStatus.BAD_REQUEST);
         }

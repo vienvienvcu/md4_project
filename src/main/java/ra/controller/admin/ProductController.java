@@ -75,4 +75,5 @@ public class ProductController {
         productService.delete(productId);
        return ResponseEntity.ok(new SimpleResponse("Category deleted successfully", HttpStatus.OK));
    }
+
 }

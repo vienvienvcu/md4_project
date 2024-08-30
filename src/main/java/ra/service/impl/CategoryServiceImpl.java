@@ -6,9 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ra.exception.SimpleException;
-import ra.model.dto.response.SimpleResponse;
 import ra.model.entity.Categories;
-import ra.model.entity.Product;
 import ra.repository.ICategoryRepository;
 import ra.repository.IProductRepository;
 import ra.service.ICategoryService;
@@ -32,7 +30,8 @@ public class CategoryServiceImpl implements ICategoryService {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new SimpleException("not exist " + categoryId, HttpStatus.NOT_FOUND));
     }
-   @Override
+
+    @Override
     public Categories insert(Categories category) throws SimpleException {
 
         if (categoryRepository.existsByCategoryName(category.getCategoryName())) {

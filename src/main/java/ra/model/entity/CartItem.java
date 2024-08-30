@@ -2,6 +2,7 @@ package ra.model.entity;
 import jakarta.persistence.*;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.Set;
@@ -18,18 +19,14 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private Users user; // Một giỏ hàng thuộc về một người dùng
+    @ManyToOne
+    @JoinColumn(name = "userId")
+    private Users users;
 
-    @ManyToMany
-    @JoinTable(
-            name = "cart_product",
-            joinColumns = @JoinColumn(name = "cartId"),
-            inverseJoinColumns = @JoinColumn(name = "productId")
-    )
-    private Set<Product> products;
+    @ManyToOne
+    @JoinColumn(name = "productId")
+    private Product product;
 
-    @NotBlank(message = "Quantity is cannot empty")
+    @NotNull(message = "Quantity  cannot be empty")
     private Integer quantity;
 }

@@ -15,18 +15,23 @@ import lombok.*;
 @Setter
 @Builder
 public class Address {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer addressId;
+
     @NotBlank(message = "Full address in cannot empty")
   private String fullAddress;
+
     @NotBlank(message = "Full address in cannot empty")
   private String receiveName;
-    @NotBlank(message = "Full address in cannot empty")
 
+    @NotBlank(message = "Full address in cannot empty")
   private String phone;
+
+
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "userId")
     private Users user;
 
 }

@@ -72,6 +72,21 @@ public class AddressController {
         return ResponseEntity.ok().body(new SimpleResponse(updatedAddress, HttpStatus.OK));
     }
 
+    @DeleteMapping("/deleteAddress/{addressId}")
+    public ResponseEntity<?> deleteAddress(@PathVariable Integer addressId) throws SimpleException {
+        MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = userDetails.getUsers().getUserId();
+        Address address = addressService.findByIdAndUserId(addressId, userId);
+        if (address == null) {
+            throw new SimpleException("Address not found or does not belong to the user", HttpStatus.NOT_FOUND);
+        }
+        addressService.delete(addressId);
+        return ResponseEntity.ok().body(new SimpleResponse("Address deleted successfully", HttpStatus.OK));
+
+
+    }
+
+
 
 
 

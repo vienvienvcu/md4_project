@@ -45,6 +45,7 @@ public class FormRegister {
     private String confirmPassword;
 
     private MultipartFile avatar;
+
     private String address;
 
     public boolean isPasswordMatching() {

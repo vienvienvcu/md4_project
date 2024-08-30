@@ -3,8 +3,6 @@ package ra.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Set;
-
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,15 +14,11 @@ public class WishList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer WishListId;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private Users user;
+    @ManyToOne
+    @JoinColumn(name = "userId")
+    private Users users;
 
-    @ManyToMany
-    @JoinTable(
-            name = "wishList_product",
-            joinColumns = @JoinColumn(name = "WishListId"),
-            inverseJoinColumns = @JoinColumn(name = "productId")
-    )
-    private Set<Product> products;
+    @ManyToOne
+    @JoinColumn(name = "productId")
+    private Product product;
 }
