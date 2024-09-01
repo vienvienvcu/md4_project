@@ -1,6 +1,7 @@
 package ra.service.impl;
 
 
+import jakarta.transaction.Transactional;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,14 +10,15 @@ import ra.constans.OrderStatus;
 import ra.exception.SimpleException;
 
 import ra.model.dto.request.OrderRequest;
-import ra.model.entity.CartItem;
-import ra.model.entity.Orders;
+import ra.model.dto.response.OrderDetailResponse;
+import ra.model.entity.*;
 
-import ra.model.entity.OrderDetail;
-import ra.model.entity.Users;
 import ra.repository.ICartItemRepository;
+import ra.repository.IProductRepository;
+import ra.repository.OrderDetailRepository;
 import ra.repository.OrderRepository;
 import ra.service.ICartItemService;
+import ra.service.IProductService;
 import ra.service.IUserService;
 import ra.service.OrderService;
 
@@ -37,9 +39,20 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private IUserService userService;
 
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    private IProductRepository productRepository;
+
     @Override
-    public Orders update(Long orderId, Orders order) throws SimpleException {
-        return null;
+    public Orders update(Long orderId, OrderRequest orderRequest) throws SimpleException {
+        Orders orders = findById(orderId);
+        if (orders == null) {
+            throw new SimpleException("Order not found", HttpStatus.NOT_FOUND);
+        }
+        orders.setOrderStatus(orderRequest.getOrderStatus());
+        return orderRepository.save(orders);
     }
 
     @Override
@@ -79,17 +92,15 @@ public class OrderServiceImpl implements OrderService {
             throw new SimpleException("CartItem is empty", HttpStatus.BAD_REQUEST);
         }
         // Calculate total price
-        Double totalPrice =cartItemList.stream()
-                .mapToDouble(item -> item.getProduct().getStock() * item.getQuantity())
+        Double totalPrice = cartItemList.stream()
+                .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
-
 
         // Sinh UUID ngẫu nhiên cho serial Number
         String serialNumber = orderRequest.getSerialNumber();
         if (serialNumber == null || serialNumber.isEmpty()) {
             serialNumber = UUID.randomUUID().toString();
         }
-
 
         // TAO DON HANG MOI
         Orders order = Orders.builder()
@@ -101,11 +112,13 @@ public class OrderServiceImpl implements OrderService {
                 .receivePhone(orderRequest.getReceivePhone())
                 .createTime(new Date())
                 .receivedTime(calculateReceivedTime(new Date())) // Calculate receivedTime
-                .orderDetails(new HashSet<>())
                 .users(user)
                 .build();
+        //save vao csdl
 
-        // Add cart items to order
+        orderRepository.save(order);
+
+        // Add cart items to order detail
 
         for (CartItem cartItem : cartItemList) {
             OrderDetail orderDetail = OrderDetail.builder()
@@ -115,14 +128,18 @@ public class OrderServiceImpl implements OrderService {
                     .order(order)
                     .product(cartItem.getProduct())
                     .build();
-            order.getOrderDetails().add(orderDetail);
+            orderDetailRepository.save(orderDetail);
+            // Cập nhật tồn kho
+            Product product = cartItem.getProduct();
+            product.setStock(product.getStock() - cartItem.getQuantity());
+            productRepository.save(product);
         }
-        // Save the order
-        Orders savedOrder = orderRepository.save(order);
-        // Clear the cart
-        cartItemService.deleteAllCartItems(userId);
-        return savedOrder;
+        // Xóa các mặt hàng trong giỏ hàng
+        cartItemRepository.deleteAll(cartItemList);
+        return order;
     }
+
+    // viet ham rieng cua ngay update
 
     private Date calculateReceivedTime(Date createTime) {
         Calendar calendar = Calendar.getInstance();
@@ -130,12 +147,13 @@ public class OrderServiceImpl implements OrderService {
         calendar.add(Calendar.DAY_OF_YEAR, 4); // Add 4 days
         return calendar.getTime();
     }
+
     @Override
     public Orders placeOrderWithSelectedItems(Long userId, List<Long> selectedItemIds, OrderRequest orderRequest) throws SimpleException {
         Users user =  userService.getUserById(userId);
 
         // Get cart items
-        List<CartItem> cartItemList = cartItemRepository.findByUsersUserId(userId);
+        List<CartItem> cartItemList = cartItemRepository.findByUsersUserIdAndCartIdIn(userId, selectedItemIds);
 
         // Filter selected items
         List<CartItem> selectedItems = new ArrayList<>();
@@ -149,7 +167,7 @@ public class OrderServiceImpl implements OrderService {
         }
         // Calculate total price
         Double totalPrice = selectedItems.stream()
-                .mapToDouble(item -> item.getProduct().getStock() * item.getQuantity())
+                .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
 
 
@@ -158,7 +176,6 @@ public class OrderServiceImpl implements OrderService {
         if (serialNumber == null || serialNumber.isEmpty()) {
             serialNumber = UUID.randomUUID().toString();
         }
-
 
         // TAO DON HANG MOI
         Orders order = Orders.builder()
@@ -169,10 +186,12 @@ public class OrderServiceImpl implements OrderService {
                 .receiveAddress(orderRequest.getReceiveAddress())
                 .receivePhone(orderRequest.getReceivePhone())
                 .createTime(new Date())
-                .receivedTime(calculateReceivedTime(new Date())) // Calculate receivedTime
+                .receivedTime(calculateReceivedTime(new Date()))
+                .users(user)
                 .build();
 
-        // Add selected items to order
+        orderRepository.save(order);
+
         for (CartItem cartItem : selectedItems) {
             OrderDetail orderDetail = OrderDetail.builder()
                     .productName(cartItem.getProduct().getProductName())
@@ -181,13 +200,16 @@ public class OrderServiceImpl implements OrderService {
                     .product(cartItem.getProduct())
                     .order(order)
                     .build();
-            order.getOrderDetails().add(orderDetail);
+
+            orderDetailRepository.save(orderDetail);
+            Product product = cartItem.getProduct();
+            product.setStock(product.getStock() - cartItem.getQuantity());
+            productRepository.save(product);
+
         }
-        // Save the order
-        Orders savedOrder = orderRepository.save(order);
         // Clear the cart
-        cartItemService.deleteAllCartItems(userId);
-        return savedOrder;
+        cartItemRepository.deleteAll(cartItemList);
+        return order;
 
 
     }
@@ -200,6 +222,37 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Orders> findByOrderStatusAndUserId(OrderStatus orderStatus, Long userId) throws SimpleException {
         return orderRepository.findByOrderStatusAndUsersUserId(orderStatus,userId);
+    }
+
+    @Override
+    public Orders findBySerial(String serial) throws SimpleException {
+        return orderRepository.findBySerialNumber(serial);
+    }
+    @Transactional
+    @Override
+    public OrderDetailResponse getOrderDetailBySerial(Long userId, String serialNumber) throws SimpleException {
+        // Tìm đơn hàng theo serialNumber
+        Orders order = orderRepository.findBySerialNumber(serialNumber);
+
+        if (order == null) {
+            throw new SimpleException("Order is empty.",HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra quyền truy cập của người dùng
+        if (!order.getUsers().getUserId().equals(userId)) {
+            throw new SimpleException("Unauthorized access to order.",HttpStatus.BAD_REQUEST);
+        }
+
+        // Lấy chi tiết đơn hàng
+        List<OrderDetail> orderDetails = orderDetailRepository.findByOrderOrderId(order.getOrderId());
+        OrderDetailResponse response = new OrderDetailResponse();
+        response.setOrderDetails(orderDetails);
+        return response;
+    }
+
+    @Override
+    public List<Orders> findByOrderStatus(OrderStatus status) throws SimpleException {
+        return orderRepository.findByOrderStatus(status);
     }
 
 

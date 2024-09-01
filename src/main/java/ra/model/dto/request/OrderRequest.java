@@ -3,6 +3,7 @@ package ra.model.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import ra.constans.OrderStatus;
 
 
 @NoArgsConstructor
@@ -11,6 +12,7 @@ import lombok.*;
 @Setter
 @Builder
 public class OrderRequest {
+
     private String serialNumber; // Phải UUID tự sinh ra, có thể được tạo trên server
 
     @NotBlank(message = "Receive name cannot be empty")
@@ -21,6 +23,8 @@ public class OrderRequest {
 
     @NotBlank(message = "Receive phone cannot be empty")
     private String receivePhone;
+
+    private OrderStatus orderStatus;
 
 
 }

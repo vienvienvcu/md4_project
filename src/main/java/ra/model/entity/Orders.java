@@ -39,8 +39,4 @@ public class Orders {
     @ManyToOne
     @JoinColumn(name = "userId")
     private Users users;
-
-    @OneToMany(mappedBy = "order")
-    @JsonIgnore // Ngăn chặn việc serialization
-    private Set<OrderDetail> orderDetails = new HashSet<>(); // Khởi tạo Set để tránh NullPointerException
 }
