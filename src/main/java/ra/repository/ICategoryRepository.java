@@ -11,4 +11,5 @@ public interface ICategoryRepository extends JpaRepository<Categories, Long> {
     Boolean existsByCategoryName(String categoryName);
     List<Categories>findCategoriesByStatusTrue();
 
+
 }

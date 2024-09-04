@@ -53,7 +53,6 @@ public class CategoryController {
         ));
     }
 
-
     @PostMapping("/addCategory")
     public ResponseEntity<?> addCategory(@Valid @RequestBody Categories category) throws SimpleException {
         Categories savedCategory = categoryService.insert(category);
@@ -62,13 +61,11 @@ public class CategoryController {
         );
     }
 
-
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getCategoryById(@PathVariable long categoryId) throws SimpleException {
         Categories category = categoryService.findById(categoryId);
         return ResponseEntity.ok().body(new SimpleResponse(category, HttpStatus.OK));
     }
-
 
     @PutMapping("categoryUpdate/{categoryId}")
     public ResponseEntity<?> updateCategory(@PathVariable long categoryId, @Valid @RequestBody Categories category) throws SimpleException {

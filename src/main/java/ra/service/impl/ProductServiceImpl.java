@@ -11,8 +11,8 @@ import ra.exception.CustomException;
 import ra.exception.SimpleException;
 import ra.model.dto.request.ProductRequest;
 import ra.model.entity.Product;
-import ra.repository.ICategoryRepository;
-import ra.repository.IProductRepository;
+import ra.repository.*;
+import ra.service.ICategoryService;
 import ra.service.IProductService;
 import ra.service.IUploadFile;
 
@@ -30,6 +30,15 @@ public class ProductServiceImpl implements IProductService {
 
     @Autowired
     private ICategoryRepository categoryRepository;
+
+    @Autowired
+    private IWishListRepository wishListRepository;
+
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    private ICartItemRepository cartItemRepository;
 
     @Override
     public Page<Product> findAll(Pageable pageable) {
@@ -79,7 +88,38 @@ public class ProductServiceImpl implements IProductService {
         if (productId== null || !productRepository.existsById(productId)) {
             throw new SimpleException("product id not exists: " + productId , HttpStatus.NOT_FOUND);
         }
+
+        // Kiểm tra xem sản phẩm có tồn tại trong danh mục không
+        if (productRepository.existsByCategoryCategoryId(productId)) {
+            throw new SimpleException("Product exists in a category and cannot be deleted: " + productId, HttpStatus.BAD_REQUEST);
+        }
+
+        // Kiểm tra xem sản phẩm có tồn tại trong đơn hàng không
+        if (orderDetailRepository.existsByProductProductId(productId)) {
+            throw new SimpleException("Product is already part of an order and cannot be deleted: " + productId, HttpStatus.CONFLICT);
+        }
+
+        // update lai trang thai product false
+        if (wishListRepository.existsByProductProductId(productId)) {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new SimpleException("Product not found: " + productId, HttpStatus.NOT_FOUND));
+            product.setStatus(false); // Thay đổi trạng thái thành không hoạt động
+            productRepository.save(product); // Lưu thay đổi
+//            wishListRepository.deleteByProductProductId(productId);
+        }
+
+        // update lai trang thai product ve false
+        if (cartItemRepository.existsByProductProductId(productId)) {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new SimpleException("Product not found: " + productId, HttpStatus.NOT_FOUND));
+            product.setStatus(false); // Thay đổi trạng thái thành không hoạt động
+            productRepository.save(product); // Lưu thay đổi
+//            cartItemRepository.deleteByProductProductId(productId);
+        }
+
+        // Xóa sản phẩm khỏi cơ sở dữ liệu
         productRepository.deleteById(productId);
+
     }
 
     @Override
@@ -142,6 +182,14 @@ public class ProductServiceImpl implements IProductService {
             throw new SimpleException("No products found for keyword: " + keyWord, HttpStatus.NOT_FOUND);
         }
         return products;
+    }
+
+    @Override
+    public void updateProductStatus(Long productId, Boolean status) throws SimpleException {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new SimpleException("Product not found: " + productId, HttpStatus.NOT_FOUND));
+        product.setStatus(false); // Cập nhật trạng thái sản phẩm
+        productRepository.save(product);
     }
 
 }

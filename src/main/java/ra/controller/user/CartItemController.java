@@ -43,22 +43,19 @@ public class CartItemController {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Tạo đối tượng CartItem từ yêu cầu
-        CartItem cartItem = new CartItem();
-        cartItem.setQuantity(cartItemRequest.getQuantity());
-
         // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
         Product product = productRepository.findById(cartItemRequest.getProductId())
                 .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
 
+        // Tạo đối tượng CartItem từ yêu cầu
+        CartItem cartItem = new CartItem();
+        cartItem.setQuantity(cartItemRequest.getQuantity());
         cartItem.setUsers(user);
         cartItem.setProduct(product);
 
-
         CartItem savedCartItem = cartItemService.saveCartItem(cartItem);
-
         return ResponseEntity.ok().body(new SimpleResponse(savedCartItem, HttpStatus.CREATED));
     }
 
@@ -68,16 +65,14 @@ public class CartItemController {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Tạo đối tượng CartItem từ yêu cầu
-        CartItem cartItem = new CartItem();
-        cartItem.setQuantity(cartItemRequest.getQuantity());
-
         // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
         Product product = productRepository.findById(cartItemRequest.getProductId())
                 .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
-
+        // Tạo đối tượng CartItem từ yêu cầu
+        CartItem cartItem = new CartItem();
+        cartItem.setQuantity(cartItemRequest.getQuantity());
         cartItem.setUsers(user);
         cartItem.setProduct(product);
 

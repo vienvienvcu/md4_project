@@ -20,4 +20,5 @@ public interface IProductService {
     List<Product> getNewestProducts(int limit) throws SimpleException;
     Page<Product> getProductByStatusTrue(Pageable pageable) throws CustomException;
     List<Product> searchProductByNameOrDescription(String keyWord) throws SimpleException;
+    void updateProductStatus(Long productId, Boolean status) throws SimpleException;
 }

@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ra.model.entity.OrderDetail;
-import ra.model.entity.Orders;
+
 
 import java.util.List;
 @NoArgsConstructor

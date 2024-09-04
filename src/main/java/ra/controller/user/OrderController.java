@@ -13,6 +13,7 @@ import ra.model.dto.request.OrderRequest;
 import ra.model.dto.response.OrderDetailResponse;
 import ra.model.dto.response.SimpleResponse;
 import ra.model.entity.Orders;
+import ra.repository.OrderRepository;
 import ra.security.principle.MyUserDetails;
 import ra.service.OrderService;
 
@@ -24,6 +25,9 @@ import java.util.List;
 public class OrderController {
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
 
     @PostMapping("/addOrderAllCart")
@@ -62,7 +66,7 @@ public class OrderController {
     public ResponseEntity<?> getOrderByStatus(@PathVariable("orderStatus") OrderStatus orderStatus) throws SimpleException {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
-        List<Orders> orderList = orderService.findByOrderStatusAndUserId(orderStatus, userId);
+        List<Orders> orderList = orderRepository.findByOrderStatusAndUsersUserId(orderStatus, userId);
         return ResponseEntity.ok().body(new SimpleResponse(orderList, HttpStatus.OK));
     }
 
@@ -79,7 +83,7 @@ public class OrderController {
     }
 
     @PutMapping("/updateStatus/{orderId}")
-    public ResponseEntity<?> updateStatus(@PathVariable Long orderId, @Valid @RequestBody OrderRequest orderRequest) throws SimpleException {
+    public ResponseEntity<?> updateStatus(@PathVariable Long orderId, @RequestBody OrderRequest orderRequest) throws SimpleException {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
@@ -93,11 +97,12 @@ public class OrderController {
             throw new SimpleException("Unauthorized access to the order.", HttpStatus.FORBIDDEN);
         }
         // Cập nhật trạng thái đơn hàng
-        order.setOrderStatus(orderRequest.getOrderStatus());
+        Orders updatedOrder = orderService.findByOrderStatusAndUserId(orderRequest.getOrderStatus(), order.getOrderId());
 
-        return ResponseEntity.ok().body(new SimpleResponse(orderService.update(orderId,orderRequest), HttpStatus.OK));
-
+        // Tạo phản hồi với thông tin đơn hàng và tồn kho sản phẩm
+        return ResponseEntity.ok().body(new SimpleResponse(updatedOrder, HttpStatus.OK));
     }
+
 }
 
 

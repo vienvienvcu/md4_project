@@ -46,12 +46,24 @@ public class OrderServiceImpl implements OrderService {
     private IProductRepository productRepository;
 
     @Override
-    public Orders update(Long orderId, OrderRequest orderRequest) throws SimpleException {
+    public Orders update(Long orderId, OrderStatus newStatus ) throws SimpleException {
         Orders orders = findById(orderId);
         if (orders == null) {
             throw new SimpleException("Order not found", HttpStatus.NOT_FOUND);
         }
-        orders.setOrderStatus(orderRequest.getOrderStatus());
+        if (orders.getOrderStatus() == OrderStatus.WAITING) {
+            orders.setOrderStatus(newStatus);
+            orderRepository.save(orders);
+        }
+        // Nếu trạng thái là DENIED, cập nhật số lượng tồn kho
+        if (newStatus == OrderStatus.DENIED) {
+            for (OrderDetail item : orderDetailRepository.findByOrderOrderId(orderId)) {
+                Product product = item.getProduct();
+                product.setStock(product.getStock() + item.getProductQuantity());
+                productRepository.save(product);
+            }
+        }
+        // Lưu lại đơn hàng với trạng thái đã cập nhật
         return orderRepository.save(orders);
     }
 
@@ -220,8 +232,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Orders> findByOrderStatusAndUserId(OrderStatus orderStatus, Long userId) throws SimpleException {
-        return orderRepository.findByOrderStatusAndUsersUserId(orderStatus,userId);
+    public Orders findByOrderStatusAndUserId(OrderStatus newStatus, Long orderId) throws SimpleException {
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new SimpleException("Order not found", HttpStatus.NOT_FOUND));
+        if (order.getOrderStatus() == OrderStatus.WAITING) {
+            // Cập nhật trạng thái đơn hàng
+            order.setOrderStatus(newStatus);
+            orderRepository.save(order);
+        }
+        // Nếu trạng thái là CANCEL, cập nhật số lượng tồn kho
+        if (newStatus == OrderStatus.CANCEL) {
+            for (OrderDetail item : orderDetailRepository.findByOrderOrderId(orderId)) {
+                Product product = item.getProduct();
+                product.setStock(product.getStock() + item.getProductQuantity());
+                productRepository.save(product);
+            }
+        }
+        // Lưu lại đơn hàng với trạng thái đã cập nhật
+        return orderRepository.save(order);
+
     }
 
     @Override
@@ -254,6 +283,4 @@ public class OrderServiceImpl implements OrderService {
     public List<Orders> findByOrderStatus(OrderStatus status) throws SimpleException {
         return orderRepository.findByOrderStatus(status);
     }
-
-
 }

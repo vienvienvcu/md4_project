@@ -10,14 +10,14 @@ import ra.model.entity.Orders;
 import java.util.List;
 
 public interface OrderService {
-    Orders update(Long orderId, OrderRequest orderRequest) throws SimpleException;
+    Orders update(Long orderId, OrderStatus newStatus) throws SimpleException;
     Orders findById(Long orderId) throws SimpleException;
     void delete(Long orderId) throws SimpleException;
     List<Orders> findAll() throws SimpleException;
     Orders placeOrderForAllItems(Long userId, OrderRequest orderRequest) throws SimpleException;
     Orders placeOrderWithSelectedItems(Long userId, List<Long> selectedItemIds, OrderRequest orderRequest) throws SimpleException;
     List<Orders> findByUsersUserId(Long userId) throws SimpleException;
-    List<Orders> findByOrderStatusAndUserId(OrderStatus orderStatus, Long userId) throws SimpleException;
+    Orders findByOrderStatusAndUserId(OrderStatus orderStatus, Long userId) throws SimpleException;
     Orders findBySerial(String serial) throws SimpleException;
     @Transactional
     OrderDetailResponse getOrderDetailBySerial(Long userId, String serialNumber) throws SimpleException;

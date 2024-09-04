@@ -100,7 +100,7 @@ public class UserManagerController {
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long userId,
             @RequestParam Boolean status) throws SimpleException {
-        userService.updateUserStatus(userId,status);
+        userService.updateUserByStatus(userId,status);
         return ResponseEntity.ok().body(new SimpleResponse("User status updated successfully", HttpStatus.OK));
     }
 

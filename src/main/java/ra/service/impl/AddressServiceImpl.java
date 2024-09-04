@@ -28,7 +28,7 @@ public class AddressServiceImpl implements IAddressService {
     @Override
     public Address save(AddressRequest addressRequest) throws SimpleException {
         if (addressRepository.existsByFullAddress(addressRequest.getFullAddress())) {
-            throw new SimpleException("product name already exists: " +
+            throw new SimpleException("Product name already exists: " +
                     addressRequest.getFullAddress(), HttpStatus.CONFLICT);
         }
         Address address = Address.builder()
@@ -62,10 +62,12 @@ public class AddressServiceImpl implements IAddressService {
         Address existingAddress = addressRepository.findById(addressId)
                 .orElseThrow(()->new SimpleException("Not pound" + addressId, HttpStatus.NOT_FOUND));
 
-        //Kiểm tra sự tồn tại của address
-        if (addressRequest.getFullAddress()!=null && addressRequest.getFullAddress().equals(existingAddress.getFullAddress())) {
-            throw new SimpleException("Address is existing: "
-                    + addressRequest.getFullAddress(), HttpStatus.BAD_REQUEST);
+        // Kiểm tra trùng lặp địa chỉ
+        if (addressRequest.getFullAddress() != null) {
+            Address duplicateAddress = addressRepository.findByFullAddressAndAddressIdNot(addressRequest.getFullAddress(), addressId);
+            if (duplicateAddress != null) {
+                throw new SimpleException("Address already exists: " + addressRequest.getFullAddress(), HttpStatus.BAD_REQUEST);
+            }
         }
         // Cập nhật các thông tin sản phẩm
         existingAddress.setFullAddress(addressRequest.getFullAddress());
@@ -85,4 +87,5 @@ public class AddressServiceImpl implements IAddressService {
     public Address findByIdAndUserId(Integer addressId, Long userId) {
         return addressRepository.findByAddressIdAndUserUserId(addressId, userId);
     }
+
 }

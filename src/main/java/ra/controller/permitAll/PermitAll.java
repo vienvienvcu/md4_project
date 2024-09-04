@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ra.constans.OrderStatus;
 import ra.exception.CustomException;
 import ra.exception.SimpleException;
 import ra.model.dto.response.DataResponse;
@@ -17,6 +18,7 @@ import ra.model.entity.Product;
 import ra.repository.IProductRepository;
 import ra.service.ICategoryService;
 import ra.service.IProductService;
+import ra.service.OrderDetailService;
 
 import java.util.List;
 
@@ -29,6 +31,9 @@ public class PermitAll {
 
     @Autowired
     private ICategoryService categoryService;
+
+    @Autowired
+    private OrderDetailService orderDetailService;
 
     // Chi tiết thông tin sản phẩm theo id - Bắt buộc
 
@@ -93,6 +98,15 @@ public class PermitAll {
 
 
   //  Danh sách sản phẩm bán chạy - Không bắt buộc
+
+    @GetMapping("/topSellingProducts")
+    public ResponseEntity<?> getTopSellingProducts(
+            @RequestParam(defaultValue = "SUCCESS") OrderStatus orderStatus,
+            @RequestParam(name = "limit", defaultValue = "5") int limit) throws SimpleException {
+
+        List<Product> topProducts = orderDetailService.getTopSellingProducts(orderStatus, limit);
+        return ResponseEntity.ok().body(new SimpleResponse(topProducts, HttpStatus.OK));
+    }
 
   //  Danh sách sản phẩm nổi bật - Không bắt buộc
 

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import ra.service.IUserService;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements IUserService {
@@ -25,6 +27,9 @@ public class UserServiceImpl implements IUserService {
     private IUserRepository userRepository;
     @Autowired
     private IUploadFile uploadFile;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
 
     @Override
     public Users updateUser(Long userId, FormRegister updatedUser, MultipartFile avatar) throws SimpleException {
@@ -57,6 +62,10 @@ public class UserServiceImpl implements IUserService {
             }
             existingUser.setUserName(updatedUser.getUserName());
         }
+        // Không cho phép cập nhật email
+        if (updatedUser.getEmail() != null && !updatedUser.getEmail().equals(existingUser.getEmail())) {
+            throw new SimpleException("Email cannot be updated", HttpStatus.BAD_REQUEST);
+        }
 
         return userRepository.save(existingUser);
     }
@@ -82,6 +91,7 @@ public class UserServiceImpl implements IUserService {
     public List<Users> findUsersByUsername(String username) {
         return userRepository.findByUserNameContainingIgnoreCase(username);
     }
+
     @Transactional
     @Override
     public void updateUserStatus(Long userId, Boolean status) throws SimpleException {
@@ -90,6 +100,46 @@ public class UserServiceImpl implements IUserService {
         }else {
             userRepository.updateUsersByStatus(userId,status);
         }
+    }
+
+    @Override
+    public void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) throws SimpleException {
+        // Tìm người dùng hiện tại
+
+        Users existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
+
+        // Kiểm tra mật khẩu hiện tại
+
+        if (!passwordEncoder.matches(currentPassword, existingUser.getPassword())) {
+            throw new SimpleException("Wrong password", HttpStatus.BAD_REQUEST);
+        }
+
+        if (newPassword != null && !newPassword.equals(confirmPassword)) {
+            throw new SimpleException("New password and confirmation do not match", HttpStatus.BAD_REQUEST);
+        }
+        // Mã hóa mật khẩu mới
+
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        existingUser.setPassword(encodedNewPassword);
+
+        // Cập nhật người dùng với mật khẩu mới
+        userRepository.save(existingUser);
+
+    }
+
+    @Override
+    public void updateUserByStatus(Long userId, Boolean status) throws SimpleException {
+        // Tìm người dùng theo ID
+        Optional<Users> existingUser = userRepository.findById(userId);
+        if (!existingUser.isPresent()) {
+            throw new SimpleException("User not found"+ userId, HttpStatus.NOT_FOUND);
+        }
+        Users user = existingUser.get();
+        // Cập nhật trạng thái
+        user.setStatus(status);
+        // Lưu lại đối tượng với trạng thái đã cập nhật
+        userRepository.save(user);
     }
 
 

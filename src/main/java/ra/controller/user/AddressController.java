@@ -53,7 +53,9 @@ public class AddressController {
     public ResponseEntity<?> addAddress(@Valid @RequestBody AddressRequest addressRequest) throws SimpleException {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
+        // Thiết lập userId cho AddressRequest
         addressRequest.setUserId(userId);
+        //ADD DIA CHI MOI
         Address savedAddress = addressService.save(addressRequest);
         return ResponseEntity.ok().body(new SimpleResponse(savedAddress, HttpStatus.CREATED));
     }
@@ -63,11 +65,16 @@ public class AddressController {
     public ResponseEntity<?> updateAddress(@PathVariable Integer addressId, @Valid @RequestBody AddressRequest addressRequest) throws SimpleException {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
+
+        // Thiết lập userId cho AddressRequest
+        addressRequest.setUserId(userId);
+
+        // Xác nhận địa chỉ tồn tại và thuộc về người dùng
         Address address = addressService.findByIdAndUserId(addressId, userId);
         if (address == null) {
             throw new SimpleException("Address not found or does not belong to the user", HttpStatus.NOT_FOUND);
         }
-        addressRequest.setUserId(userId);
+        // Cập nhật địa chỉ
         Address updatedAddress = addressService.update(addressId, addressRequest);
         return ResponseEntity.ok().body(new SimpleResponse(updatedAddress, HttpStatus.OK));
     }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ra.exception.CustomException;
 import ra.exception.SimpleException;
+import ra.model.dto.request.ChangePasswordRequest;
 import ra.model.dto.request.FormRegister;
 import ra.model.dto.response.DataResponse;
 import ra.model.dto.response.SimpleResponse;
@@ -18,7 +19,8 @@ import ra.service.IUserService;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
-public class UserController {
+public class
+UserController {
     private final IUserService userService;
     @GetMapping
     public ResponseEntity<?> getFullName()
@@ -27,7 +29,7 @@ public class UserController {
         return ResponseEntity.ok().body(userDetails.getUsers().getUserName());
     }
 
-    @GetMapping("/me")
+    @GetMapping("/getUserInfo")
     public ResponseEntity<?> getUserDetails() {
         // Lấy thông tin người dùng từ SecurityContext
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -37,7 +39,7 @@ public class UserController {
     }
 
 
-    @PutMapping("/me")
+    @PutMapping("/updateUser")
     public ResponseEntity<?> updateUser(
             @ModelAttribute FormRegister updatedUserForm,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws  SimpleException {
@@ -46,8 +48,22 @@ public class UserController {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Gọi dịch vụ để cập nhật thông tin của người dùng đã xác thực
+
         Users updatedUser = userService.updateUser(userId, updatedUserForm, avatar);
-        return ResponseEntity.ok().body(new SimpleResponse(updatedUser, HttpStatus.OK));
+        return ResponseEntity.ok().body(new SimpleResponse("Update successful", HttpStatus.OK));
+    }
+
+    @PostMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest) throws SimpleException {
+
+        // Lấy ID của người dùng đang xác thực
+        MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = userDetails.getUsers().getUserId();
+
+        // Gọi dịch vụ để thay đổi mật khẩu
+        userService.changePassword(userId, changePasswordRequest.getCurrentPassword(),
+                changePasswordRequest.getNewPassword(),changePasswordRequest.getConfirmPassword());
+
+        return ResponseEntity.ok().body(new SimpleResponse("Password changed successfully", HttpStatus.OK));
     }
 }

@@ -7,14 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import ra.constans.OrderStatus;
 import ra.exception.SimpleException;
 import ra.model.dto.request.OrderRequest;
-import ra.model.dto.response.OrderDetailResponse;
 import ra.model.dto.response.SimpleResponse;
 import ra.model.entity.OrderDetail;
 import ra.model.entity.Orders;
 import ra.repository.OrderDetailRepository;
-import ra.service.OrderDetailService;
 import ra.service.OrderService;
-
 import java.util.List;
 
 @RestController
@@ -38,7 +35,6 @@ public class OrderManagerController {
         return ResponseEntity.ok().body(new SimpleResponse(ordersList, HttpStatus.OK));
 
     }
-
     @GetMapping("/getOrderDetailByOrderId/{orderId}")
     public ResponseEntity<?> findOrderDetailByOrderId(@PathVariable("orderId") Long orderId) throws SimpleException {
         List<OrderDetail> orderDetailList = orderDetailRepository.findByOrderOrderId(orderId);
@@ -50,7 +46,7 @@ public class OrderManagerController {
     public ResponseEntity<?> updateOrderStatus(@PathVariable("orderId") Long orderId, @RequestBody OrderRequest orderRequest) throws SimpleException {
         Orders newOrder = orderService.findById(orderId);
         newOrder.setOrderStatus(orderRequest.getOrderStatus());
-        orderService.update(orderId,orderRequest);
+        orderService.update(orderId,orderRequest.getOrderStatus());
         return ResponseEntity.ok().body(new SimpleResponse(newOrder, HttpStatus.OK));
     }
 

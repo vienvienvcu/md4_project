@@ -27,6 +27,8 @@ public class ICartItemServiceImpl implements ICartItemService {
     private IUserRepository userRepository;
 
     @Override
+
+    //Trả về tất cả các mục giỏ hàng mà không phân biệt người dùng.
     public List<CartItem> getCartItems() throws SimpleException {
         return cartItemRepository.findAll();
     }
@@ -39,12 +41,8 @@ public class ICartItemServiceImpl implements ICartItemService {
 
     @Override
     public CartItem saveCartItem(CartItem cartItem) throws SimpleException {
-        // Kiểm tra sự tồn tại của sản phẩm và người dùng
-        Product product = productRepository.findById(cartItem.getProduct().getProductId())
-                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
-
-        Users user = userRepository.findById(cartItem.getUsers().getUserId())
-                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
+        Product product = cartItem.getProduct();
+        Users user = cartItem.getUsers();
 
         // Kiểm tra nếu sản phẩm đã có trong giỏ hàng của người dùng
         CartItem existingCartItem = cartItemRepository.findByUsersAndProduct(user, product);
@@ -73,9 +71,13 @@ public class ICartItemServiceImpl implements ICartItemService {
         // Kiểm tra sự tồn tại của mục giỏ hàng
         CartItem existingCartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new SimpleException("Cart item not found: " + cartItemId, HttpStatus.NOT_FOUND));
+
         // Kiểm tra sự tồn tại của sản phẩm
-        Product product = productRepository.findById(existingCartItem.getProduct().getProductId())
-                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
+        Product product = cartItem.getProduct();
+        if (product == null || !productRepository.existsById(product.getProductId())) {
+            throw new SimpleException("Product not found", HttpStatus.NOT_FOUND);
+        }
+
         // Kiểm tra số lượng trước khi update sản phẩm vào giỏ hàng
         if (cartItem.getQuantity()>product.getStock()) {
             throw new SimpleException("Quantity exceeds stock", HttpStatus.BAD_REQUEST);

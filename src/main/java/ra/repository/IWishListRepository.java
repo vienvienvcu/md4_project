@@ -17,7 +17,8 @@ public interface IWishListRepository extends JpaRepository<WishList, Integer> {
 
     //LAY RA MOT LIST WISH LIST THEO USERID
     List<WishList> findByUsersUserId(Long userId);
-
+    Boolean existsByProductProductId(Long productId);
+    void deleteByProductProductId(Long productId);
     @Transactional
     void deleteByUsersUserId(Long userId);
 }

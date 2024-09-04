@@ -20,4 +20,5 @@ public interface IUserRepository extends JpaRepository<Users, Long> {
     @Modifying
     @Query("UPDATE Users u SET u.status = :status WHERE u.userId = :userId")
     void updateUsersByStatus(Long userId, Boolean status);
+    List<Users> findByStatus(Boolean status);
 }

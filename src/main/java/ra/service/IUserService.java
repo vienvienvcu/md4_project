@@ -17,4 +17,6 @@ public interface IUserService {
     Page<Users> searchUsersByUsername(String username, Pageable pageable) throws CustomException;
     List<Users> findUsersByUsername(String username) throws SimpleException;
     void updateUserStatus(Long userId, Boolean status) throws SimpleException;
+    void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) throws SimpleException;
+    void updateUserByStatus(Long orderId, Boolean status) throws SimpleException;
 }

@@ -11,9 +11,11 @@ import java.util.List;
 @Repository
 public interface IProductRepository extends JpaRepository<Product, Long> {
     boolean existsByCategoryCategoryId(Long categoryId);
+
     boolean existsByProductName(String productName);
     List<Product> findProductByCategoryCategoryId(Long categoryId);
     Page<Product> findAllByOrderByUpdateTimeDesc(Pageable pageable);
     Page<Product> findProductByStatusTrue(Pageable pageable);
     List<Product> findByProductNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String productName, String description);
 }
+
