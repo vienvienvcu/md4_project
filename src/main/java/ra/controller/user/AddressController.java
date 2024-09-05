@@ -29,10 +29,8 @@ public class AddressController {
         // Lấy thông tin người dùng từ SecurityContext
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId(); // Lấy userId từ thông tin người dùng
-
         // Lấy tất cả địa chỉ của người dùng từ dịch vụ
         List<Address> addressList = addressService.findByUserId(userId);
-
         // Trả về phản hồi với danh sách địa chỉ
         return ResponseEntity.ok().body(new SimpleResponse(addressList, HttpStatus.OK));
     }
