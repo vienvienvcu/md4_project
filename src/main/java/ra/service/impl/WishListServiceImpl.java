@@ -53,8 +53,7 @@ public class WishListServiceImpl implements IWishListService {
 
         WishList existtingWishList = wishListRepository.findByUsersAndProduct(users,product);
         if(existtingWishList != null){
-            // xoa cai san pham co trong wishList di
-           wishListRepository.delete(existtingWishList);
+            throw new SimpleException("WishList item already exists", HttpStatus.CONFLICT);
         }
 
         // Thiết lập sản phẩm và người dùng cho wishList

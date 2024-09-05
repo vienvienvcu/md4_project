@@ -77,7 +77,7 @@ public class OrderController {
         // Lấy chi tiết đơn hàng theo serialNumber
         OrderDetailResponse orderDetailResponse = orderService.getOrderDetailBySerial(userId, serialNumber);
         if (orderDetailResponse == null) {
-            throw new SimpleException("Order not found.", HttpStatus.NOT_FOUND);
+            throw new SimpleException("Order detail not found.", HttpStatus.NOT_FOUND);
         }
         return ResponseEntity.ok().body(new SimpleResponse(orderDetailResponse, HttpStatus.OK));
     }
@@ -97,7 +97,7 @@ public class OrderController {
             throw new SimpleException("Unauthorized access to the order.", HttpStatus.FORBIDDEN);
         }
         // Cập nhật trạng thái đơn hàng
-        Orders updatedOrder = orderService.findByOrderStatusAndUserId(orderRequest.getOrderStatus(), order.getOrderId());
+        Orders updatedOrder = orderService.findByOrderStatusAndOrderId(orderRequest.getOrderStatus(), orderId);
 
         // Tạo phản hồi với thông tin đơn hàng và tồn kho sản phẩm
         return ResponseEntity.ok().body(new SimpleResponse(updatedOrder, HttpStatus.OK));

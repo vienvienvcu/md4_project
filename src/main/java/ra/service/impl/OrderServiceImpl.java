@@ -2,7 +2,7 @@ package ra.service.impl;
 
 
 import jakarta.transaction.Transactional;
-import org.apache.catalina.User;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import ra.repository.IProductRepository;
 import ra.repository.OrderDetailRepository;
 import ra.repository.OrderRepository;
 import ra.service.ICartItemService;
-import ra.service.IProductService;
+
 import ra.service.IUserService;
 import ra.service.OrderService;
 
@@ -230,9 +230,10 @@ public class OrderServiceImpl implements OrderService {
     public List<Orders> findByUsersUserId(Long userId) throws SimpleException {
         return orderRepository.findByUsersUserId(userId);
     }
-
+// update trang thai status doi vs user/ cancel khi ma hang van dang o trang thai cho xac dinh, va tra ve so luo
+//    khi o trang thai nay
     @Override
-    public Orders findByOrderStatusAndUserId(OrderStatus newStatus, Long orderId) throws SimpleException {
+    public Orders findByOrderStatusAndOrderId(OrderStatus newStatus, Long orderId) throws SimpleException {
         Orders order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new SimpleException("Order not found", HttpStatus.NOT_FOUND));
         if (order.getOrderStatus() == OrderStatus.WAITING) {

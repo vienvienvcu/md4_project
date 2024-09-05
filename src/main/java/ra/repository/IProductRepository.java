@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface IProductRepository extends JpaRepository<Product, Long> {
     boolean existsByCategoryCategoryId(Long categoryId);
-
+    Product findByProductNameAndProductIdNot(String productName, Long productId);
     boolean existsByProductName(String productName);
     List<Product> findProductByCategoryCategoryId(Long categoryId);
     Page<Product> findAllByOrderByUpdateTimeDesc(Pageable pageable);

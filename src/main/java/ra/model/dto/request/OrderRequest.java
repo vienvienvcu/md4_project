@@ -1,9 +1,12 @@
 package ra.model.dto.request;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import ra.constans.OrderStatus;
+
+import java.util.Date;
 
 
 @NoArgsConstructor
@@ -23,6 +26,12 @@ public class OrderRequest {
 
     @NotBlank(message = "Receive phone cannot be empty")
     private String receivePhone;
+
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date createTime;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private Date receivedTime;
+
 
     private OrderStatus orderStatus;
 

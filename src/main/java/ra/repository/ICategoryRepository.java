@@ -10,6 +10,7 @@ import java.util.List;
 public interface ICategoryRepository extends JpaRepository<Categories, Long> {
     Boolean existsByCategoryName(String categoryName);
     List<Categories>findCategoriesByStatusTrue();
+    Categories findByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId);
 
 
 }

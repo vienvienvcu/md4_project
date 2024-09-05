@@ -15,7 +15,6 @@ import ra.model.dto.response.DataResponse;
 import ra.model.dto.response.SimpleResponse;
 import ra.model.entity.Categories;
 import ra.model.entity.Product;
-import ra.repository.IProductRepository;
 import ra.service.ICategoryService;
 import ra.service.IProductService;
 import ra.service.OrderDetailService;

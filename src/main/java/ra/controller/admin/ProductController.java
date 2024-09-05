@@ -38,7 +38,7 @@ public class ProductController {
 
         Page<Product> productsPage = productService.findAll(pageable);
 
-        return ResponseEntity.ok().body(new DataResponse(
+        return ResponseEntity.ok().body(new DataResponse<>(
                 productsPage.getContent(),
                 HttpStatus.OK,
                 productsPage.getTotalPages(), // Tổng số trang

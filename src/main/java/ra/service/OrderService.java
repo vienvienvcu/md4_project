@@ -17,7 +17,7 @@ public interface OrderService {
     Orders placeOrderForAllItems(Long userId, OrderRequest orderRequest) throws SimpleException;
     Orders placeOrderWithSelectedItems(Long userId, List<Long> selectedItemIds, OrderRequest orderRequest) throws SimpleException;
     List<Orders> findByUsersUserId(Long userId) throws SimpleException;
-    Orders findByOrderStatusAndUserId(OrderStatus orderStatus, Long userId) throws SimpleException;
+    Orders findByOrderStatusAndOrderId(OrderStatus orderStatus, Long orderId) throws SimpleException;
     Orders findBySerial(String serial) throws SimpleException;
     @Transactional
     OrderDetailResponse getOrderDetailBySerial(Long userId, String serialNumber) throws SimpleException;

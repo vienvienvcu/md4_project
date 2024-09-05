@@ -12,7 +12,6 @@ import ra.exception.SimpleException;
 import ra.model.dto.request.ProductRequest;
 import ra.model.entity.Product;
 import ra.repository.*;
-import ra.service.ICategoryService;
 import ra.service.IProductService;
 import ra.service.IUploadFile;
 
@@ -124,15 +123,21 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public Product update(Long productId, ProductRequest productRequest, MultipartFile file) throws SimpleException {
+
         // Tìm sản phẩm cần cập nhật
         Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new SimpleException("Sản phẩm không tìm thấy", HttpStatus.NOT_FOUND));
+
         // Nếu có tên sản phẩm mới, kiểm tra xem tên đó có trùng với các tên sản phẩm khác không (ngoài tên của sản phẩm hiện tại)
-        if (productRequest.getProductName() != null &&
-                productRequest.getProductName().equals(existingProduct.getProductName())) {
-            throw new SimpleException("Tên sản phẩm đã tồn tại: "
-                    + productRequest.getProductName(), HttpStatus.BAD_REQUEST);
+        if (productRequest.getProductName() != null ){
+            // Tìm SAN PHAM khác có tên giống tên mới, không phải TEN SAN PHAM hiện tại
+            Product productWithSameName = productRepository.
+                    findByProductNameAndProductIdNot(productRequest.getProductName(), productId);
+            if (productWithSameName != null) {
+                throw new SimpleException("Product name already exists: " + productWithSameName , HttpStatus.CONFLICT);
+            }
         }
+
         // Cập nhật các thông tin sản phẩm
         existingProduct.setProductName(productRequest.getProductName());
         existingProduct.setDescription(productRequest.getDescription());
@@ -140,7 +145,9 @@ public class ProductServiceImpl implements IProductService {
         existingProduct.setStock(productRequest.getStock());
         existingProduct.setStatus(productRequest.getStatus());
         existingProduct.setUpdateTime(new Date());
+
         // Cập nhật danh mục
+
         existingProduct.setCategory(categoryRepository.findById(productRequest.getCategoryId())
                 .orElseThrow(() -> new SimpleException("Danh mục không tìm thấy", HttpStatus.NOT_FOUND)));
 
@@ -148,6 +155,7 @@ public class ProductServiceImpl implements IProductService {
             String imageUrl = uploadFile.uploadLocal(file);
             existingProduct.setImage(imageUrl);
         }
+
         // Lưu sản phẩm đã cập nhật vào cơ sở dữ liệu
         return productRepository.save(existingProduct);
 
@@ -177,7 +185,8 @@ public class ProductServiceImpl implements IProductService {
         if (keyWord == null || keyWord.trim().isEmpty()) {
             throw new SimpleException("Keyword cannot be null or empty", HttpStatus.BAD_REQUEST);
         }
-        List<Product> products = productRepository.findByProductNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyWord, keyWord);
+        List<Product> products = productRepository
+                .findByProductNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyWord, keyWord);
         if (products.isEmpty()) {
             throw new SimpleException("No products found for keyword: " + keyWord, HttpStatus.NOT_FOUND);
         }

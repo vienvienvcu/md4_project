@@ -45,13 +45,15 @@ public class CategoryServiceImpl implements ICategoryService {
         // Kiểm tra sự tồn tại của danh mục
         Categories existingCategory =categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new SimpleException("Sản phẩm không tìm thấy", HttpStatus.NOT_FOUND));
-        // Nếu có tên sản phẩm mới, kiểm tra xem tên đó có trùng với các tên sản phẩm khác không (ngoài tên của sản phẩm hiện tại)
-        if (category.getCategoryName() != null &&
-                !category.getCategoryName().equals(existingCategory.getCategoryName())){
-            throw new SimpleException("Tên sản phẩm đã tồn tại: "
-                    + category.getCategoryName(), HttpStatus.BAD_REQUEST);
+        // Nếu có tên danh mục mới, kiểm tra xem tên đó có trùng với các tên danh mục khác không (ngoài danh mục hiện tại)
+        if (category.getCategoryName() != null) {
+            // Tìm danh mục khác có tên giống tên mới, không phải danh mục hiện tại
+            Categories categoryWithSameName = categoryRepository.findByCategoryNameAndCategoryIdNot(category.getCategoryName(), categoryId);
+            if (categoryWithSameName != null) {
+                throw new SimpleException("Tên danh mục đã tồn tại: " + category.getCategoryName(), HttpStatus.BAD_REQUEST);
+            }
         }
-        return categoryRepository.save(category);
+        return categoryRepository.save(existingCategory);
     }
 
     @Override
