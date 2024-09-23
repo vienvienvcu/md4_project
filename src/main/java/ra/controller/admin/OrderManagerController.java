@@ -44,10 +44,9 @@ public class OrderManagerController {
     //thay dou trang thai doi hang
     @PutMapping("/updateOrderStatus/{orderId}")
     public ResponseEntity<?> updateOrderStatus(@PathVariable("orderId") Long orderId, @RequestBody OrderRequest orderRequest) throws SimpleException {
-        Orders newOrder = orderService.findById(orderId);
-        newOrder.setOrderStatus(orderRequest.getOrderStatus());
+
         orderService.update(orderId,orderRequest.getOrderStatus());
-        return ResponseEntity.ok().body(new SimpleResponse(newOrder, HttpStatus.OK));
+        return ResponseEntity.ok().body(new SimpleResponse("Update success", HttpStatus.OK));
     }
 
 

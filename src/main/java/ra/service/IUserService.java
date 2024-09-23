@@ -18,5 +18,5 @@ public interface IUserService {
     List<Users> findUsersByUsername(String username) throws SimpleException;
     void updateUserStatus(Long userId, Boolean status) throws SimpleException;
     void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) throws SimpleException;
-    void updateUserByStatus(Long orderId, Boolean status) throws SimpleException;
+    void updateUserByStatus(Long userId, Boolean status, Long currentUserId) throws SimpleException;
 }

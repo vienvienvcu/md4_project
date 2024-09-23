@@ -56,24 +56,8 @@ public class WishListController {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Tạo đối tượng CartItem từ yêu cầu
-
-        WishList newWishList = new WishList();
-
-
-        // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
-        Product product = productRepository.findById(wishListRequest.getProductId())
-                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
-
-        newWishList.setUsers(user);
-        newWishList.setProduct(product);
-
-        //SAU DO TRA VE 1 DOI TUONG MOI
-
         return ResponseEntity.ok()
-                .body(new SimpleResponse(wishListService.saveWishList(newWishList),HttpStatus.CREATED));
+                .body(new SimpleResponse(wishListService.saveWishList(userId,wishListRequest),HttpStatus.CREATED));
 
     }
 

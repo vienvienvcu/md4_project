@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import ra.exception.SimpleException;
+import ra.model.dto.request.WishListRequest;
 import ra.model.entity.Product;
 import ra.model.entity.Users;
 import ra.model.entity.WishList;
@@ -39,14 +40,14 @@ public class WishListServiceImpl implements IWishListService {
     }
 
     @Override
-    public WishList saveWishList(WishList wishList) throws SimpleException {
+    public WishList saveWishList(Long userId, WishListRequest wishListRequest) throws SimpleException {
 
         // Kiểm tra sự tồn tại của sản phẩm và người dùng
 
-        Product product = productRepository.findById(wishList.getProduct().getProductId())
+        Product product = productRepository.findById(wishListRequest.getProductId())
                 .orElseThrow(()-> new SimpleException("Product not found",HttpStatus.NOT_FOUND));
 
-        Users users = userRepository.findById(wishList.getUsers().getUserId())
+        Users users = userRepository.findById(userId)
                 .orElseThrow(()-> new SimpleException("User not found",HttpStatus.NOT_FOUND));
 
        //   kiem tra trong 1 list wishList da ton tai san phan va user chua??
@@ -57,6 +58,8 @@ public class WishListServiceImpl implements IWishListService {
         }
 
         // Thiết lập sản phẩm và người dùng cho wishList
+
+        WishList wishList = new WishList();
         wishList.setProduct(product);
         wishList.setUsers(users);
         return wishListRepository.save(wishList);

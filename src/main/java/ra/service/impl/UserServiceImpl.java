@@ -128,19 +128,33 @@ public class UserServiceImpl implements IUserService {
 
     }
 
+
     @Override
-    public void updateUserByStatus(Long userId, Boolean status) throws SimpleException {
+    public void updateUserByStatus(Long userId, Boolean status, Long currentUserId) throws SimpleException {
         // Tìm người dùng theo ID
         Optional<Users> existingUser = userRepository.findById(userId);
         if (!existingUser.isPresent()) {
-            throw new SimpleException("User not found"+ userId, HttpStatus.NOT_FOUND);
+            throw new SimpleException("User not found: " + userId, HttpStatus.NOT_FOUND);
         }
-        Users user = existingUser.get();
+        Users userToUpdate = existingUser.get();
+
+        // Kiểm tra vai trò của người dùng hiện tại
+
+        userToUpdate.getRoles().forEach(role->{
+            if ("ROLE_ADMIN".equals(role.getRoleName().toString())) {
+                try {
+                    throw new SimpleException("admin cannot block",HttpStatus.BAD_REQUEST);
+                } catch (SimpleException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         // Cập nhật trạng thái
-        user.setStatus(status);
+        userToUpdate.setStatus(status);
         // Lưu lại đối tượng với trạng thái đã cập nhật
-        userRepository.save(user);
+        userRepository.save(userToUpdate);
     }
+
 
 
 }

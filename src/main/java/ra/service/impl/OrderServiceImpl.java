@@ -46,26 +46,61 @@ public class OrderServiceImpl implements OrderService {
     private IProductRepository productRepository;
 
     @Override
-    public Orders update(Long orderId, OrderStatus newStatus ) throws SimpleException {
+    public Orders update(Long orderId, OrderStatus newStatus) throws SimpleException {
+        // Tìm đơn hàng theo ID
         Orders orders = findById(orderId);
+
+        // Kiểm tra xem đơn hàng có tồn tại không
         if (orders == null) {
             throw new SimpleException("Order not found", HttpStatus.NOT_FOUND);
         }
-        if (orders.getOrderStatus() == OrderStatus.WAITING) {
-            orders.setOrderStatus(newStatus);
-            orderRepository.save(orders);
+
+        // Kiểm tra trạng thái hiện tại của đơn hàng
+        OrderStatus currentStatus = orders.getOrderStatus();
+
+        // Quy tắc cập nhật trạng thái hợp lệ
+        switch (currentStatus) {
+            case WAITING:
+                if (newStatus == OrderStatus.DENIED) {
+                    orders.setOrderStatus(OrderStatus.DENIED);
+                    // Cập nhật số lượng tồn kho khi trạng thái là DENIED
+                    for (OrderDetail item : orderDetailRepository.findByOrderOrderId(orderId)) {
+                        Product product = item.getProduct();
+                        product.setStock(product.getStock() + item.getProductQuantity());
+                        productRepository.save(product);
+                    }
+                } else if (newStatus == OrderStatus.CONFIRM) {
+                    orders.setOrderStatus(newStatus);
+                } else {
+                    throw new SimpleException("Invalid status update from WAITING", HttpStatus.BAD_REQUEST);
+                }
+                break;
+
+            case CONFIRM:
+                if (newStatus == OrderStatus.DELIVERY) {
+                    orders.setOrderStatus(newStatus);
+                } else {
+                    throw new SimpleException("Invalid status update from CONFIRM", HttpStatus.BAD_REQUEST);
+                }
+                break;
+
+            case DELIVERY:
+                if (newStatus == OrderStatus.SUCCESS) {
+                    orders.setOrderStatus(newStatus);
+                } else {
+                    throw new SimpleException("Invalid status update from DELIVERY", HttpStatus.BAD_REQUEST);
+                }
+                break;
+
+            case SUCCESS:
+            case DENIED:
+                throw new SimpleException("Cannot update order status from " + currentStatus, HttpStatus.BAD_REQUEST);
         }
-        // Nếu trạng thái là DENIED, cập nhật số lượng tồn kho
-        if (newStatus == OrderStatus.DENIED) {
-            for (OrderDetail item : orderDetailRepository.findByOrderOrderId(orderId)) {
-                Product product = item.getProduct();
-                product.setStock(product.getStock() + item.getProductQuantity());
-                productRepository.save(product);
-            }
-        }
+
         // Lưu lại đơn hàng với trạng thái đã cập nhật
         return orderRepository.save(orders);
     }
+
 
     @Override
     public Orders findById(Long orderId) throws SimpleException {
@@ -127,7 +162,6 @@ public class OrderServiceImpl implements OrderService {
                 .users(user)
                 .build();
         //save vao csdl
-
         orderRepository.save(order);
 
         // Add cart items to order detail
@@ -163,9 +197,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Orders placeOrderWithSelectedItems(Long userId, List<Long> selectedItemIds, OrderRequest orderRequest) throws SimpleException {
         Users user =  userService.getUserById(userId);
-
         // Get cart items
         List<CartItem> cartItemList = cartItemRepository.findByUsersUserIdAndCartIdIn(userId, selectedItemIds);
+
+        if (cartItemList.isEmpty()){
+            throw new SimpleException("CartItem is empty", HttpStatus.BAD_REQUEST);
+        }
 
         // Filter selected items
         List<CartItem> selectedItems = new ArrayList<>();
@@ -222,17 +259,16 @@ public class OrderServiceImpl implements OrderService {
         // Clear the cart
         cartItemRepository.deleteAll(cartItemList);
         return order;
-
-
     }
 
     @Override
     public List<Orders> findByUsersUserId(Long userId) throws SimpleException {
         return orderRepository.findByUsersUserId(userId);
     }
-// update trang thai status doi vs user/ cancel khi ma hang van dang o trang thai cho xac dinh, va tra ve so luo
-//    khi o trang thai nay
+
     @Override
+    // update trang thai status doi vs user/ cancel khi ma hang van dang o trang thai cho xac dinh, va tra ve so luo
+//    khi o trang thai nay
     public Orders findByOrderStatusAndOrderId(OrderStatus newStatus, Long orderId) throws SimpleException {
         Orders order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new SimpleException("Order not found", HttpStatus.NOT_FOUND));
@@ -240,6 +276,8 @@ public class OrderServiceImpl implements OrderService {
             // Cập nhật trạng thái đơn hàng
             order.setOrderStatus(newStatus);
             orderRepository.save(order);
+        }else {
+            throw new SimpleException("Invalid status update", HttpStatus.BAD_REQUEST);
         }
         // Nếu trạng thái là CANCEL, cập nhật số lượng tồn kho
         if (newStatus == OrderStatus.CANCEL) {

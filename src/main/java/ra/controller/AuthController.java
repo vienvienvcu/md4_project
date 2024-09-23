@@ -12,6 +12,7 @@ import ra.exception.CustomException;
 import ra.exception.SimpleException;
 import ra.model.dto.request.FormLogin;
 import ra.model.dto.request.FormRegister;
+import ra.model.dto.response.SimpleResponse;
 import ra.service.IAuthService;
 
 import java.net.URI;
@@ -29,7 +30,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Passwords do not match");
         }
         authService.register(formRegister);
-        return ResponseEntity.created(URI.create("api/v1/auth/register")).body("Register successfully");
+        return ResponseEntity.created(URI.create("api/v1/auth/register"))
+                .body(new SimpleResponse("Register Success ",HttpStatus.OK));
     }
 
     @PostMapping("/login")

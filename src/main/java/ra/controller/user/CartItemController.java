@@ -43,41 +43,18 @@ public class CartItemController {
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
-        Product product = productRepository.findById(cartItemRequest.getProductId())
-                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
-
-        // Tạo đối tượng CartItem từ yêu cầu
-        CartItem cartItem = new CartItem();
-        cartItem.setQuantity(cartItemRequest.getQuantity());
-        cartItem.setUsers(user);
-        cartItem.setProduct(product);
-
-        CartItem savedCartItem = cartItemService.saveCartItem(cartItem);
+        CartItem savedCartItem = cartItemService.saveCartItem(cartItemRequest,userId);
         return ResponseEntity.ok().body(new SimpleResponse(savedCartItem, HttpStatus.CREATED));
     }
 
     @PutMapping("/updateCart/{cartItemId}")
     public ResponseEntity<?> updateCartItem(@PathVariable Long cartItemId, @Valid @RequestBody CartItemRequest cartItemRequest) throws SimpleException {
-        // Lấy thông tin người dùng từ SecurityContext
+         // Lấy thông tin người dùng từ SecurityContext
         MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = userDetails.getUsers().getUserId();
 
-        // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
-        Product product = productRepository.findById(cartItemRequest.getProductId())
-                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
-        // Tạo đối tượng CartItem từ yêu cầu
-        CartItem cartItem = new CartItem();
-        cartItem.setQuantity(cartItemRequest.getQuantity());
-        cartItem.setUsers(user);
-        cartItem.setProduct(product);
-
-        // Cập nhật sản phẩm trong giỏ hàng
-        CartItem updatedCartItem = cartItemService.updateCartItem(cartItemId, cartItem);
+        // Gọi phương thức service để xử lý cập nhật
+        CartItem updatedCartItem = cartItemService.updateCartItem(cartItemId, cartItemRequest, userId);
 
         return ResponseEntity.ok().body(new SimpleResponse(updatedCartItem, HttpStatus.OK));
     }

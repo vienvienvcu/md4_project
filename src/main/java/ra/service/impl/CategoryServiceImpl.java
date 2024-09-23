@@ -53,7 +53,7 @@ public class CategoryServiceImpl implements ICategoryService {
                 throw new SimpleException("Tên danh mục đã tồn tại: " + category.getCategoryName(), HttpStatus.BAD_REQUEST);
             }
         }
-        return categoryRepository.save(existingCategory);
+        return categoryRepository.save(category);
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ra.exception.SimpleException;
+import ra.model.dto.request.CartItemRequest;
 import ra.model.entity.CartItem;
 import ra.model.entity.Product;
 import ra.model.entity.Users;
@@ -40,9 +41,18 @@ public class ICartItemServiceImpl implements ICartItemService {
     }
 
     @Override
-    public CartItem saveCartItem(CartItem cartItem) throws SimpleException {
-        Product product = cartItem.getProduct();
-        Users user = cartItem.getUsers();
+    public CartItem saveCartItem(CartItemRequest cartItemRequest, Long userId) throws SimpleException {
+        // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
+        Product product = productRepository.findById(cartItemRequest.getProductId())
+                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
+
+        // Tạo đối tượng CartItem từ yêu cầu
+        CartItem cartItem = new CartItem();
+        cartItem.setQuantity(cartItemRequest.getQuantity());
+        cartItem.setUsers(user);
+        cartItem.setProduct(product);
 
         // Kiểm tra nếu sản phẩm đã có trong giỏ hàng của người dùng
         CartItem existingCartItem = cartItemRepository.findByUsersAndProduct(user, product);
@@ -50,14 +60,14 @@ public class ICartItemServiceImpl implements ICartItemService {
        if(existingCartItem != null) {
         // Cập nhật số lượng nếu sản phẩm đã có trong giỏ hàng
            int newQuantity = existingCartItem.getQuantity() + cartItem.getQuantity();
-           if (newQuantity>product.getStock()) {
+           if (newQuantity>=product.getStock()) {
                throw new SimpleException("Quantity exceeds stock", HttpStatus.BAD_REQUEST);
            }
            existingCartItem.setQuantity(newQuantity);
            return cartItemRepository.save(existingCartItem);
        }else {
          // Kiểm tra số lượng trước khi thêm mới sản phẩm vào giỏ hàng
-           if(cartItem.getQuantity()>product.getStock()) {
+           if(cartItem.getQuantity()>=product.getStock()) {
                throw new SimpleException("Quantity exceeds stock", HttpStatus.BAD_REQUEST);
            }
            cartItem.setProduct(product);
@@ -67,23 +77,23 @@ public class ICartItemServiceImpl implements ICartItemService {
     }
 
     @Override
-    public CartItem updateCartItem(Long cartItemId, CartItem cartItem) throws SimpleException {
-        // Kiểm tra sự tồn tại của mục giỏ hàng
-        CartItem existingCartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new SimpleException("Cart item not found: " + cartItemId, HttpStatus.NOT_FOUND));
+    public CartItem updateCartItem(Long cartItemId, CartItemRequest cartItemRequest, Long userId) throws SimpleException {
+        // Tìm người dùng và sản phẩm từ cơ sở dữ liệu
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new SimpleException("User not found", HttpStatus.NOT_FOUND));
+        Product product = productRepository.findById(cartItemRequest.getProductId())
+                .orElseThrow(() -> new SimpleException("Product not found", HttpStatus.NOT_FOUND));
 
-        // Kiểm tra sự tồn tại của sản phẩm
-        Product product = cartItem.getProduct();
-        if (product == null || !productRepository.existsById(product.getProductId())) {
-            throw new SimpleException("Product not found", HttpStatus.NOT_FOUND);
-        }
-
-        // Kiểm tra số lượng trước khi update sản phẩm vào giỏ hàng
-        if (cartItem.getQuantity()>product.getStock()) {
+        // Tìm mục giỏ hàng hiện tại
+        CartItem existingCartItem = cartItemRepository.findByUsersAndProduct(user, product);
+        // Kiểm tra số lượng trước khi cập nhật
+        if (cartItemRequest.getQuantity() > product.getStock()) {
             throw new SimpleException("Quantity exceeds stock", HttpStatus.BAD_REQUEST);
         }
+
         // Cập nhật thông tin của mục giỏ hàng
-        existingCartItem.setQuantity(cartItem.getQuantity());
+        existingCartItem.setQuantity(cartItemRequest.getQuantity());
+        existingCartItem.setProduct(product);
         return cartItemRepository.save(existingCartItem);
     }
 

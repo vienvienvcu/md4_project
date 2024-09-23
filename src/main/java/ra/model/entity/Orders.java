@@ -35,7 +35,6 @@ public class Orders {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date receivedTime;
 
-
     @ManyToOne
     @JoinColumn(name = "userId")
     private Users users;

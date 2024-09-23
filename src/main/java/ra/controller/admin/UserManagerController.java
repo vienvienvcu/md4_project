@@ -7,12 +7,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import ra.exception.CustomException;
 import ra.exception.SimpleException;
 import ra.model.dto.response.DataResponse;
 import ra.model.dto.response.SimpleResponse;
 import ra.model.entity.Users;
+import ra.security.principle.MyUserDetails;
 import ra.service.IUserService;
 
 import java.util.List;
@@ -99,9 +103,18 @@ public class UserManagerController {
     @PutMapping("/updateUserStatus/{userId}")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long userId,
-            @RequestParam Boolean status) throws SimpleException {
-        userService.updateUserByStatus(userId,status);
-        return ResponseEntity.ok().body(new SimpleResponse("User status updated successfully", HttpStatus.OK));
+            @RequestParam Boolean status,
+            @AuthenticationPrincipal UserDetails currentUser) throws SimpleException {
+
+        // Lấy ID của người dùng hiện tại từ thông tin xác thực
+        MyUserDetails userDetails = (MyUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long currentUserId = userDetails.getUsers().getUserId();
+
+        // Gọi phương thức dịch vụ để cập nhật trạng thái người dùng
+        userService.updateUserByStatus(userId, status, currentUserId);
+
+        // Trả về phản hồi thành công
+        return ResponseEntity.ok().body(new SimpleResponse("Admin status updated successfully", HttpStatus.OK));
     }
 
 
